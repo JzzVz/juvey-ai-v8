@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090d18">
+<meta name="description" content="JUVEY AI V8 — asistente personal con herramientas y niveles.">
+<link rel="manifest" href="manifest.json">
+<title>JUVEY AI V8</title>
+<style>
+:root{color-scheme:dark;--bg:#090d18;--panel:#111827;--panel2:#172033;--line:#28344b;--cyan:#5ee7f7;--purple:#a78bfa;--text:#f3f6ff;--muted:#a4afc5;--green:#6ee7a8;--red:#fb7185}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#172746 0%,var(--bg) 48%);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+button,input,textarea{font:inherit}button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:13px;padding:10px 13px}button:active{transform:scale(.98)}button.primary{background:linear-gradient(110deg,#0ea5e9,#7c3aed);border:0;font-weight:750}
+.wrap{max-width:850px;margin:auto;padding:16px 14px 24px}.top{display:flex;align-items:center;gap:12px;padding:12px 4px 18px}.logo{width:48px;height:48px;border-radius:16px;background:linear-gradient(145deg,#22d3ee,#7c3aed);display:grid;place-items:center;font-weight:900;font-size:20px;color:#07111f;box-shadow:0 0 30px #22d3ee25}.top h1{font-size:21px;line-height:1.1;margin:0}.sub{color:var(--muted);font-size:12px;margin-top:5px}.pill{margin-left:auto;border:1px solid #31566a;background:#102b3a;color:var(--cyan);border-radius:99px;padding:5px 9px;font-size:12px;white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:13px}.stat,.card{background:#101827eF;border:1px solid var(--line);border-radius:18px;padding:13px}.stat small{display:block;color:var(--muted);font-size:12px}.stat strong{font-size:20px}.progress{height:6px;background:#28344b;border-radius:99px;margin-top:8px;overflow:hidden}.progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--purple))}
+.tabs{display:flex;gap:7px;overflow:auto;margin:12px 0}.tabs button{white-space:nowrap}.tabs button.active{border-color:var(--cyan);color:var(--cyan);background:#102636}
+.card{margin-bottom:12px}.sectionhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.sectionhead h2{font-size:16px;margin:0}.muted{color:var(--muted);font-size:13px}
+.chat{height:min(45vh,430px);min-height:260px;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:3px 1px 12px}.msg{max-width:91%;padding:11px 13px;border-radius:15px;white-space:pre-wrap;overflow-wrap:anywhere}.bot{align-self:flex-start;background:#1a263b;border:1px solid #293b57}.user{align-self:flex-end;background:#123b50;border:1px solid #1e6078}.msg .who{font-size:11px;color:var(--cyan);font-weight:800;margin-bottom:4px}.composer{display:flex;gap:8px;align-items:end}.composer textarea{resize:vertical;min-height:46px;max-height:130px;flex:1;background:#0b1220;color:var(--text);border:1px solid var(--line);border-radius:14px;padding:12px;outline:none}.composer textarea:focus,input:focus{border-color:var(--cyan);outline:none}
+.tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.tool{display:flex;align-items:center;gap:10px;text-align:left}.tool span:first-child{font-size:23px}.tool b{display:block;font-size:14px}.tool small{display:block;color:var(--muted);font-size:11px}
+input[type=text],input[type=password],input[type=number]{width:100%;background:#0b1220;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:11px;margin:5px 0 10px}.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}.notice{border:1px solid #66522b;background:#292313;color:#f7d995;border-radius:12px;padding:10px;font-size:12px;margin:9px 0}.hidden{display:none!important}.historyitem{border-bottom:1px solid var(--line);padding:9px 0}.footer{text-align:center;color:#75829a;font-size:11px;padding:12px}
+@media(min-width:650px){.tools{grid-template-columns:repeat(4,minmax(0,1fr))}.wrap{padding-top:25px}.chat{height:440px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div class="logo">J</div><div><h1>JUVEY AI <span style="color:var(--cyan)">V8</span></h1><div class="sub">Tu asistente · herramientas · progreso</div></div><div class="pill" id="status">● Modo local</div></header>
+<div class="stats">
+ <div class="stat"><small>⭐ Nivel</small><strong id="level">1</strong><div class="progress"><span id="xpbar"></span></div></div>
+ <div class="stat"><small>⚡ Experiencia</small><strong id="xp">0 XP</strong></div>
+ <div class="stat"><small>💬 Mensajes</small><strong id="count">0</strong></div>
+</div>
+<nav class="tabs">
+ <button class="active" data-tab="chat">🤖 Chat</button><button data-tab="tools">🧰 Herramientas</button><button data-tab="memory">🧠 Memoria</button><button data-tab="settings">⚙️ Ajustes</button>
+</nav>
+<section id="tab-chat">
+ <div class="card">
+  <div class="sectionhead"><h2>Conversación</h2><button id="clearChat">Limpiar chat</button></div>
+  <div class="chat" id="chat" aria-live="polite"></div>
+  <div class="composer"><textarea id="prompt" placeholder="Escribe algo… (prueba: ayuda, dados, calc 2+2)" rows="1"></textarea><button class="primary" id="send">Enviar ➤</button></div>
+  <div class="muted" style="margin-top:8px">Comandos: <b>ayuda</b>, <b>dados</b>, <b>ppt piedra</b>, <b>calc 2+2</b>, <b>nivel</b>, <b>fortnite</b>, <b>motogp</b>.</div>
+ </div>
+</section>
+<section id="tab-tools" class="hidden">
+ <div class="card"><div class="sectionhead"><h2>Herramientas rápidas</h2><span class="muted">Funcionan sin IA</span></div>
+ <div class="tools">
+  <button class="tool" data-command="dados"><span>🎲</span><span><b>Tirar dados</b><small>Dado de seis caras</small></span></button>
+  <button class="tool" data-command="ppt"><span>🪨</span><span><b>Piedra, papel o tijera</b><small>Juega contra Juvey AI</small></span></button>
+  <button class="tool" data-command="calc"><span>🧮</span><span><b>Calculadora</b><small>Operaciones seguras</small></span></button>
+  <button class="tool" data-command="nivel"><span>⭐</span><span><b>Mi nivel</b><small>XP y progreso</small></span></button>
+  <button class="tool" data-command="fortnite"><span>🎮</span><span><b>Fortnite</b><small>Acceso al módulo</small></span></button>
+  <button class="tool" data-command="motogp"><span>🏍️</span><span><b>MotoGP</b><small>Acceso al módulo</small></span></button>
+  <button class="tool" data-command="ayuda"><span>📖</span><span><b>Ayuda</b><small>Ver comandos</small></span></button>
+ </div></div>
+</section>
+<section id="tab-memory" class="hidden">
+ <div class="card"><div class="sectionhead"><h2>🧠 Memoria local</h2><button id="exportData">Exportar copia</button></div>
+ <label class="muted" for="nickname">¿Cómo quieres que te llame?</label><input id="nickname" type="text" maxlength="40" placeholder="Tu nombre">
+ <button class="primary" id="saveName">Guardar nombre</button>
+ <p class="muted">Los datos se guardan en este navegador en tu dispositivo. Exporta una copia antes de borrar los datos del navegador.</p>
+ <div class="sectionhead"><h2>Últimas conversaciones</h2><button id="clearMemory">Borrar historial</button></div><div id="history"></div></div>
+</section>
+<section id="tab-settings" class="hidden">
+ <div class="card"><h2 style="margin-top:0">Conectar Gemini (opcional)</h2>
+ <div class="notice">Seguridad: no publiques una web con una clave de API dentro. Esta versión usa la clave solo en la sesión actual y no la guarda. Para una app pública, conecta Gemini mediante un servidor privado.</div>
+ <label class="muted" for="apiKey">Clave API de Google AI Studio</label><input id="apiKey" type="password" autocomplete="off" placeholder="Pega aquí tu clave nueva">
+ <label class="muted" for="model">Modelo de Gemini</label><input id="model" type="text" value="gemini-2.5-flash">
+ <div class="row"><button class="primary" id="saveApi">Usar clave en esta sesión</button><button id="forgetApi">Olvidar clave</button></div>
+ <p class="muted">Si no configuras Gemini, el chat sigue funcionando con comandos locales. No pegues aquí una clave que hayas publicado o compartido.</p>
+ </div>
+ <div class="card"><h2 style="margin-top:0">Datos y aplicación</h2><button id="install" class="primary">Instalar / añadir a inicio</button> <button id="reset">Restablecer progreso</button><p class="muted">Para instalarla como app desde Chrome, primero publica estos archivos en HTTPS (por ejemplo, GitHub Pages). También puedes abrir index.html para probar la interfaz, aunque la instalación PWA requiere HTTPS o localhost.</p></div>
+</section>
+<div class="footer">JUVEY AI V8 · Hecha para aprender y crear 🚀</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const defaults={name:"Juvey",level:1,xp:0,count:0,history:[],chat:[{role:"bot",text:"¡Ey! Soy JUVEY AI V8 🤖\\nPuedo ayudarte con comandos, cálculos y minijuegos. Si configuras Gemini en Ajustes, también podrás conversar con el modelo."}]};
+let data;
+try{data={...defaults,...JSON.parse(localStorage.getItem("juvey_ai_v8")||"{}")}}catch{data={...defaults}}
+let apiKey="",model="gemini-2.5-flash",installPrompt=null;
+function save(){localStorage.setItem("juvey_ai_v8",JSON.stringify(data));renderStats()}
+function renderStats(){ $("level").textContent=data.level;$("xp").textContent=data.xp+" XP";$("count").textContent=data.count;$("xpbar").style.width=(data.xp%100)+"%";$("nickname").value=data.name||""}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function addMessage(role,text,store=true){const node=document.createElement("div");node.className="msg "+(role==="user"?"user":"bot");node.innerHTML='<div class="who">'+(role==="user"?"TÚ":"JUVEY AI")+'</div><div>'+escapeHtml(text)+'</div>';$("chat").appendChild(node);$("chat").scrollTop=$("chat").scrollHeight;if(store){data.chat.push({role,text});if(data.chat.length>80)data.chat=data.chat.slice(-80);save()}}
+function renderChat(){$("chat").innerHTML="";data.chat.forEach(m=>addMessage(m.role,m.text,false));$("chat").scrollTop=$("chat").scrollHeight}
+function xp(){data.xp+=10;while(data.xp>=100){data.xp-=100;data.level++;data.history.unshift({q:"¡Subiste al nivel "+data.level+"!",a:"¡Sigue así!"})}data.count++;save()}
+function safeCalc(expr){if(!/^[0-9+\-*/%().\s]+$/.test(expr)||!/[0-9]/.test(expr))throw Error("Solo se permiten números y + - * / % y paréntesis.");let tokens=expr.match(/(?:\d+(?:\.\d*)?|\.\d+)|[()+\-*/%]/g);if(!tokens||tokens.join("")!==expr.replace(/\s/g,""))throw Error("Expresión no válida.");let i=0;function atom(){let t=tokens[i++];if(t==="+"||t==="-"){let v=atom();return t==="-"?-v:v}if(t==="("){let v=add();if(tokens[i++]!==")")throw Error("Falta cerrar paréntesis.");return v}if(t===undefined||!/^(\d+\.?\d*|\.\d+)$/.test(t))throw Error("Operación no válida.");return Number(t)}function mul(){let v=atom();while(["*","/","%"].includes(tokens[i])){let op=tokens[i++],r=atom();if((op==="/"||op==="%")&&r===0)throw Error("No se puede dividir entre cero.");v=op==="*"?v*r:op==="/"?v/r:v%r}return v}function add(){let v=mul();while(tokens[i]==="+"||tokens[i]==="-"){let op=tokens[i++],r=mul();v=op==="+"?v+r:v-r}return v}let result=add();if(i!==tokens.length||!Number.isFinite(result))throw Error("Operación no válida.");return result}
+function localCommand(raw){let t=raw.trim().toLowerCase();if(t==="ayuda")return "Comandos disponibles:\\n• dados — tira un dado\\n• ppt piedra/papel/tijera — juega\\n• calc 2+2*5 — calcula\\n• nivel — muestra tu progreso\\n• fortnite / motogp — abre el módulo informativo\\n• salir — no cierra Chrome; simplemente termina la conversación.";
+if(t==="dados")return "🎲 Ha salido un "+(1+Math.floor(Math.random()*6))+".";
+if(t==="nivel")return "⭐ Nivel "+data.level+" · "+data.xp+"/100 XP para el siguiente nivel.";
+if(t==="fortnite")return "🎮 Módulo Fortnite listo. Esta versión aún no consulta estadísticas en directo.";
+if(t==="motogp")return "🏍️ Módulo MotoGP listo. Esta versión aún no consulta resultados en directo.";
+if(t.startsWith("ppt")){let u=t.slice(3).trim();if(!["piedra","papel","tijera"].includes(u))return "Escribe: ppt piedra, ppt papel o ppt tijera.";let b=["piedra","papel","tijera"][Math.floor(Math.random()*3)];let res=u===b?"Empate":((u==="piedra"&&b==="tijera")||(u==="papel"&&b==="piedra")||(u==="tijera"&&b==="papel"))?"¡Ganaste!":"Has perdido";return "Yo elijo "+b+". "+res;}
+if(t.startsWith("calc ")){try{return "🧮 Resultado: "+safeCalc(t.slice(5))}catch(e){return "⚠️ "+e.message}}
+return null}
+async function send(){let prompt=$("prompt").value.trim();if(!prompt)return;$("prompt").value="";addMessage("user",prompt);xp();let result=localCommand(prompt);if(prompt.toLowerCase()==="salir"){addMessage("bot","Puedes cerrar esta pestaña cuando quieras 👋");return}if(result){addMessage("bot",result);data.history.unshift({q:prompt,a:result});data.history=data.history.slice(0,30);save();renderHistory();return}
+if(!apiKey){addMessage("bot","Todavía no tengo Gemini conectado. Puedo usar mis herramientas locales: escribe «ayuda». Para activar la IA, ve a Ajustes y añade una clave API nueva de Google AI Studio.");return}
+$("status").textContent="● Conectando…";
+try{const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent?key="+encodeURIComponent(apiKey),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({system_instruction:{parts:[{text:"Eres JUVEY AI, un asistente amable que habla español claro. No afirmes tener herramientas o información en directo que no tienes."}]},contents:[{role:"user",parts:[{text:prompt}]}]})});const j=await r.json();if(!r.ok)throw Error(j.error?.message||("HTTP "+r.status));const answer=j.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"No recibí respuesta.";addMessage("bot",answer);data.history.unshift({q:prompt,a:answer});data.history=data.history.slice(0,30);save();renderHistory();$("status").textContent="● Gemini conectado"}catch(e){addMessage("bot","No he podido conectar con Gemini: "+e.message+"\\nRevisa la clave y el nombre del modelo en Ajustes.");$("status").textContent="● Modo local"}}
+function renderHistory(){$("history").innerHTML=data.history.length?data.history.slice(0,10).map(h=>'<div class="historyitem"><b>'+escapeHtml(h.q)+'</b><div class="muted">'+escapeHtml(h.a)+'</div></div>').join(""):'<div class="muted">Todavía no hay historial.</div>'}
+$("send").onclick=send;$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}});
+document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("active",x===b));["chat","tools","memory","settings"].forEach(t=>$("tab-"+t).classList.toggle("hidden",t!==b.dataset.tab));if(b.dataset.tab==="memory")renderHistory()});
+document.querySelectorAll("[data-command]").forEach(b=>b.onclick=()=>{let c=b.dataset.command;if(c==="ppt"){const v=prompt("Elige piedra, papel o tijera:");if(v)c="ppt "+v}else if(c==="calc"){const v=prompt("Escribe la operación, por ejemplo 2+2*5:");if(v)c="calc "+v}if(c){$("prompt").value=c;document.querySelector('[data-tab="chat"]').click();send()}});
+$("clearChat").onclick=()=>{data.chat=[];save();renderChat();addMessage("bot","Chat limpio. ¿Qué hacemos ahora?")};
+$("saveName").onclick=()=>{data.name=$("nickname").value.trim().slice(0,40)||"Amigo";save();addMessage("bot","¡Perfecto, "+data.name+"! Lo recordaré en este navegador.")};
+$("saveApi").onclick=()=>{apiKey=$("apiKey").value.trim();model=$("model").value.trim()||"gemini-2.5-flash";$("apiKey").value="";$("status").textContent=apiKey?"● Clave en sesión":"● Modo local";addMessage("bot",apiKey?"Clave guardada solo en la memoria de esta pestaña. No la compartas ni publiques la app con esta configuración.":"No se introdujo ninguna clave.")};
+$("forgetApi").onclick=()=>{apiKey="";$("apiKey").value="";$("status").textContent="● Modo local";addMessage("bot","Clave olvidada.")};
+$("exportData").onclick=()=>{const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="juvey-ai-backup.json";a.click();URL.revokeObjectURL(url)};
+$("clearMemory").onclick=()=>{if(confirm("¿Borrar el historial guardado?")){data.history=[];save();renderHistory()}};
+$("reset").onclick=()=>{if(confirm("¿Restablecer nivel, XP y mensajes?")){data.level=1;data.xp=0;data.count=0;save();addMessage("bot","Progreso restablecido.")}};
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installPrompt=e});$("install").onclick=async()=>{if(installPrompt){installPrompt.prompt();await installPrompt.userChoice;installPrompt=null}else alert("Abre esta web publicada con HTTPS en Chrome y usa el menú ⋮ → Añadir a pantalla de inicio o Instalar aplicación.")};
+renderStats();renderChat();renderHistory();
+if("serviceWorker" in navigator && location.protocol.startsWith("http"))navigator.serviceWorker.register("./sw.js").catch(()=>{});
+</script>
+</body></html>
